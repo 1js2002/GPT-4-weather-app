@@ -1,3 +1,7 @@
+import {getClient} from "@/apollo-client";
+import CalloutCard from "@/components/CalloutCard";
+import fetchWeatherQuery from "@/graphql/queries/fetchWeatherQueries";
+
 type Props = {
     params: {
         city: string;
@@ -6,8 +10,41 @@ type Props = {
     }
 }
 
-function WeatherPage({params: {city, lat, long}}: Props) {
-    return <div>welcome: {city} {lat} {long} </div>
+async function WeatherPage({params: {city, lat, long}}: Props) {
+    const client = getClient();
+    
+    const { data } = await client.query({
+        query: fetchWeatherQuery,
+        variables: {
+            current_weather: "true",
+            longitude: long,
+            latitude: lat,
+            timezone: "GMT",
+        },
+    });
+    
+    const results: Root = data.myQuery;
+    console.log(results);
+    return(
+        <div className="flex flex-col min-h-screen md:flex-row bg-[#fafafa]">
+        <div className="flex-1 p-5 lg:p-10">
+          <div className="p-5">
+            <div className="pb-5">
+              <h2 className="text-xl font-bold">Todays Overview</h2>
+              <p className="text-sm text-gray-400">
+                Last Updated at: {""}
+                {new Date(results.current_weather.time).toLocaleString()} (
+                {results.timezone} )
+              </p>
+            </div>
+  
+            <div className="m-2 mb-10">
+              <CalloutCard message="sa" />
+            </div>
+        </div>
+    </div>
+    </div>
+    )
 }
 
 export default WeatherPage
