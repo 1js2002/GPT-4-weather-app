@@ -5,11 +5,11 @@ import InformationPanel from "@/components/InformationPanel";
 import RainChart from "@/components/RainChart";
 import StatCard from "@/components/StatCard";
 import TempChart from "@/components/TempChart";
-import fetchWeatherQuery from "@/graphql/queries/fetchWeatherQueries";
+import fecthWeatherQuery from "@/graphql/queries/fetchWeatherQueries";
 import cleanData from "@/lib/cleanData";
 import getBasePath from "@/lib/getBasePath";
 
-export const revalidate = 43200;
+export const revalidate = 60;
 
 type Props = {
   params: {
@@ -23,18 +23,21 @@ async function WeatherPage({ params: { city, lat, long } }: Props) {
   const client = getClient();
 
   const { data } = await client.query({
-    query: fetchWeatherQuery,
+    query: fecthWeatherQuery,
     variables: {
       current_weather: "true",
-      longitude: long,
       latitude: lat,
+      longitude: long,
       timezone: "GMT",
     },
   });
 
   const results: Root = data.myQuery;
 
+  console.log("Results: ", results);
+
   const dataToSend = cleanData(results, city);
+  console.log("dataToSend: ", dataToSend);
 
   const res = await fetch(`${getBasePath()}/api/getWeatherSummary`, {
     method: "POST",
@@ -46,50 +49,52 @@ async function WeatherPage({ params: { city, lat, long } }: Props) {
     }),
   });
 
-  // const GPTdata = await res.json();
-  // const { content } = GPTdata;
+  const GPTData = await res.json();
+
+  const { content } = GPTData;
 
   return (
-    <div className="flex flex-col min-h-screen md:flex-row bg-[#fafafa]">
-      <InformationPanel city={city} long={long} lat={lat} results={results} />
+    <div className="flex flex-col min-h-screen md:flex-row">
+      {/* Information Pannel */}
+      <InformationPanel city={city} lat={lat} long={long} results={results} />
 
       <div className="flex-1 p-5 lg:p-10">
         <div className="p-5">
           <div className="pb-5">
-            <h2 className="text-xl font-bold">Todays Overview</h2>
+            <h2 className="text-xl font-bold">Today Overview</h2>
             <p className="text-sm text-gray-400">
-              Last Updated at: {""}
+              Last Updated at:{" "}
               {new Date(results.current_weather.time).toLocaleString()} (
-              {results.timezone} )
+              {results.timezone})
             </p>
           </div>
 
           <div className="m-2 mb-10">
-            <CalloutCard message="sdj" />
+            <CalloutCard message="chatgpt response goes here"/>
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 m-2">
             <StatCard
               title="Maximum Temperature"
-              metric={`${results.daily.temperature_2m_max[0].toFixed(1)}˚C`}
-              color="blue"
+              metric={`${results.daily.temperature_2m_max[0].toFixed(1)}°`}
+              color="yellow"
             />
 
             <StatCard
               title="Minimum Temperature"
-              metric={`${results.daily.temperature_2m_min[0].toFixed(1)}˚C`}
-              color="blue"
+              metric={`${results.daily.temperature_2m_min[0].toFixed(1)}°`}
+              color="green"
             />
 
             <div>
               <StatCard
                 title="UV Index"
                 metric={`${results.daily.uv_index_max[0].toFixed(1)}`}
-                color="blue"
+                color="rose"
               />
               {Number(results.daily.uv_index_max[0].toFixed(1)) > 5 && (
                 <CalloutCard
-                  message={"The UV is high today, be sure to wear sunscreen"}
+                  message="The UV is high today, be sure to wear SPF!"
                   warning
                 />
               )}
@@ -98,14 +103,14 @@ async function WeatherPage({ params: { city, lat, long } }: Props) {
             <div className="flex space-x-3">
               <StatCard
                 title="Wind Speed"
-                metric={`${results.current_weather.windspeed.toFixed(1)} km/s`}
-                color="sky"
+                metric={`${results.current_weather.windspeed.toFixed(1)}m/s`}
+                color="cyan"
               />
 
               <StatCard
                 title="Wind Direction"
-                metric={`${results.current_weather.winddirection.toFixed(1)}˚`}
-                color="sky"
+                metric={`${results.current_weather.winddirection.toFixed(1)}°`}
+                color="violet"
               />
             </div>
           </div>
