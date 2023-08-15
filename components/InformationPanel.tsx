@@ -178,9 +178,7 @@ function InformationPanel({ city, lat, long, results }: Props) {
             })}
           </p>
 
-          <p className="font-extralight text-xs w-fit">
-            Timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
-          </p>
+          
         </div>
 
         <div>
